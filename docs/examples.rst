@@ -24,3 +24,12 @@ Example showing the Full scale selection setting
 .. literalinclude:: ../examples/h3lis200dl_full_scale_selection.py
     :caption: examples/h3lis200dl_full_scale_selection.py
     :lines: 5-
+
+Data rate settings
+-------------------
+
+Example showing the Data rate setting
+
+.. literalinclude:: ../examples/h3lis200dl_data_rate.py
+    :caption: examples/h3lis200dl_data_rate.py
+    :lines: 5-
