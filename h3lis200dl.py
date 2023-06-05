@@ -81,6 +81,12 @@ FILTER_NORMAL_MODE = const(0b00)
 FILTER_SIGNAL_FILTERING = const(0b01)
 high_pass_filter_mode_values = (FILTER_NORMAL_MODE, FILTER_SIGNAL_FILTERING)
 
+HPCF8 = const(0b00)
+HPCF16 = const(0b01)
+HPCF32 = const(0b10)
+HPCF64 = const(0b11)
+high_pass_filter_cutoff_values = (HPCF8, HPCF16, HPCF32, HPCF64)
+
 
 class H3LIS200DL:
     """Driver for the H3LIS200DL Sensor connected over I2C.
@@ -133,6 +139,7 @@ class H3LIS200DL:
     # Register CTRL_REG2 (0x21)
     # |BOOT|HPM1|HPM0|FDS|HPen2|HPen1|HPCF1|HPCF0|
     _high_pass_filter_mode = RWBits(2, _CTRL_REG2, 5)
+    _high_pass_filter_cutoff = RWBits(2, _CTRL_REG2, 0)
 
     def __init__(self, i2c_bus: I2C, address: int = 0x19) -> None:
         self.i2c_device = i2c_device.I2CDevice(i2c_bus, address)
@@ -380,3 +387,32 @@ class H3LIS200DL:
         if value not in high_pass_filter_mode_values:
             raise ValueError("Value must be a valid high_pass_filter_mode setting")
         self._high_pass_filter_mode = value
+
+    # pylint: disable=line-too-long
+    @property
+    def high_pass_filter_cutoff(self) -> str:
+        """
+        Sensor high_pass_filter_cutoff
+
+        +-------------------------------+------------------+----------------+-----------------+-----------------+------------------+
+        | Mode                          | Value            |Data Rate=50 Hz |Data Rate=100 Hz |Data Rate=400 Hz |Data Rate=1000 Hz |
+        +===============================+==================+================+=================+=================+==================+
+        | :py:const:`h3lis200dl.HPCF8`  | :py:const:`0b00` |       1        |        2        |       8         |       20         |
+        +-------------------------------+------------------+----------------+-----------------+-----------------+------------------+
+        | :py:const:`h3lis200dl.HPCF16` | :py:const:`0b01` |       0.5      |        1        |       4         |       10         |
+        +-------------------------------+------------------+----------------+-----------------+-----------------+------------------+
+        | :py:const:`h3lis200dl.HPCF32` | :py:const:`0b10` |       0.25     |        0.50     |       2         |       5          |
+        +-------------------------------+------------------+----------------+-----------------+-----------------+------------------+
+        | :py:const:`h3lis200dl.HPCF64` | :py:const:`0b11` |       0.125    |        0.25     |       1         |       2.5        |
+        +-------------------------------+------------------+----------------+-----------------+-----------------+------------------+
+        """
+        values = ("HPCF8", "HPCF16", "HPCF32", "HPCF64")
+        return values[self._high_pass_filter_cutoff]
+
+    # pylint: enable=line-too-long
+
+    @high_pass_filter_cutoff.setter
+    def high_pass_filter_cutoff(self, value: int) -> None:
+        if value not in high_pass_filter_cutoff_values:
+            raise ValueError("Value must be a valid high_pass_filter_cutoff setting")
+        self._high_pass_filter_cutoff = value

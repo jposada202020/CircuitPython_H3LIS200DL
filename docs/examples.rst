@@ -33,3 +33,12 @@ Example showing the Data rate setting
 .. literalinclude:: ../examples/h3lis200dl_data_rate.py
     :caption: examples/h3lis200dl_data_rate.py
     :lines: 5-
+
+High pass filter cutoff settings
+---------------------------------
+
+Example showing the High pass filter cutoff setting
+
+.. literalinclude:: ../examples/h3lis200dl_high_pass_filter_cutoff.py
+    :caption: examples/h3lis200dl_high_pass_filter_cutoff.py
+    :lines: 5-

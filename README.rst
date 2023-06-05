@@ -23,7 +23,8 @@ Introduction
     :target: https://github.com/psf/black
     :alt: Code Style: Black
 
-CircuitPython Driver for the ST H3LIS200DL Accelerometer
+CircuitPython Driver for the ST H3LIS200DL Accelerometer.
+My sensor seems to give some odd readings. So discretion is advised!
 
 
 Dependencies
