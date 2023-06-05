@@ -17,6 +17,7 @@ from micropython import const
 from adafruit_bus_device import i2c_device
 from adafruit_register.i2c_struct import ROUnaryStruct, UnaryStruct
 from adafruit_register.i2c_bits import RWBits
+from adafruit_register.i2c_bit import RWBit
 
 try:
     from busio import I2C
@@ -56,6 +57,15 @@ operation_mode_values = (
 )
 
 
+# Axis Enabled Values
+X_DISABLED = const(0b0)
+X_ENABLED = const(0b1)
+Y_DISABLED = const(0b0)
+Y_ENABLED = const(0b1)
+Z_DISABLED = const(0b0)
+Z_ENABLED = const(0b1)
+axis_enabled_values = (X_DISABLED, X_ENABLED)
+
 SCALE_100G = const(0b0)
 SCALE_200G = const(0b1)
 full_scale_selection_values = (SCALE_100G, SCALE_200G)
@@ -94,14 +104,19 @@ class H3LIS200DL:
     """
 
     _device_id = ROUnaryStruct(_REG_WHOAMI, "B")
-    _ctrl1 = UnaryStruct(_CTRL_REG1, "B")
-    _operation_mode = RWBits(3, _CTRL_REG1, 5)
-    _full_scale_selection = RWBits(1, _CTRL_REG4, 4)
 
     # Acceleration Data
     _acc_data_x = UnaryStruct(_ACC_X, "B")
     _acc_data_y = UnaryStruct(_ACC_Y, "B")
     _acc_data_z = UnaryStruct(_ACC_Z, "B")
+
+    # Register CTRL_REG1 (0x20)
+    # |PM2|PM1|PM0|DR1|DR0|Zen|Yen|Xen|
+    _operation_mode = RWBits(3, _CTRL_REG1, 5)
+    _full_scale_selection = RWBits(1, _CTRL_REG4, 4)
+    _z_enabled = RWBit(_CTRL_REG1, 2)
+    _y_enabled = RWBit(_CTRL_REG1, 1)
+    _x_enabled = RWBit(_CTRL_REG1, 0)
 
     def __init__(self, i2c_bus: I2C, address: int = 0x19) -> None:
         self.i2c_device = i2c_device.I2CDevice(i2c_bus, address)
@@ -110,6 +125,7 @@ class H3LIS200DL:
             raise RuntimeError("Failed to find H3LIS200DL")
 
         self._operation_mode = NORMAL_MODE
+        self._memory_full_scale_selection = self._operation_mode
 
     @property
     def operation_mode(self) -> str:
@@ -152,25 +168,25 @@ class H3LIS200DL:
         self._operation_mode = value
 
     @property
-    def acceleration(self) -> Tuple[int, int, int]:
+    def acceleration(self) -> Tuple[float, float, float]:
         """
-        Accelertion property
+        Acceleration property
         :return: Acceleration data
         """
 
         x = (
             self._twos_comp(self._acc_data_x, 7)
-            * full_scale[self._full_scale_selection]
+            * full_scale[self._memory_full_scale_selection]
             / 128
         )
         y = (
             self._twos_comp(self._acc_data_y, 7)
-            * full_scale[self._full_scale_selection]
+            * full_scale[self._memory_full_scale_selection]
             / 128
         )
         z = (
             self._twos_comp(self._acc_data_z, 7)
-            * full_scale[self._full_scale_selection]
+            * full_scale[self._memory_full_scale_selection]
             / 128
         )
         return x, y, z
@@ -199,9 +215,91 @@ class H3LIS200DL:
         if value not in full_scale_selection_values:
             raise ValueError("Value must be a valid full_scale_selection setting")
         self._full_scale_selection = value
+        self._memory_full_scale_selection = value
 
     @staticmethod
     def _twos_comp(val: int, bits: int) -> int:
         if val & (1 << (bits - 1)) != 0:
             return val - (1 << bits)
         return val
+
+    @property
+    def x_enabled(self) -> str:
+        """
+        Sensor x_enabled
+        In order to optimize further power consumption of the h3lis200dl, data evaluation
+        of individual axes can be deactivated. Per default, all three axes are active.
+
+        +-----------------------------------+-----------------+
+        | Mode                              | Value           |
+        +===================================+=================+
+        | :py:const:`h3lis200dl.X_DISABLED` | :py:const:`0b0` |
+        +-----------------------------------+-----------------+
+        | :py:const:`h3lis200dl.X_ENABLED`  | :py:const:`0b1` |
+        +-----------------------------------+-----------------+
+        """
+        values = (
+            "X_DISABLED",
+            "X_ENABLED",
+        )
+        return values[self._x_enabled]
+
+    @x_enabled.setter
+    def x_enabled(self, value: int) -> None:
+        if value not in axis_enabled_values:
+            raise ValueError("Value must be a valid x_enabled setting")
+        self._x_enabled = value
+
+    @property
+    def y_enabled(self) -> str:
+        """
+        Sensor y_enabled
+        In order to optimize further power consumption of the h3lis200dl, data evaluation
+        of individual axes can be deactivated. Per default, all three axes are active.
+
+        +-----------------------------------+-----------------+
+        | Mode                              | Value           |
+        +===================================+=================+
+        | :py:const:`h3lis200dl.Y_DISABLED` | :py:const:`0b0` |
+        +-----------------------------------+-----------------+
+        | :py:const:`h3lis200dl.Y_ENABLED`  | :py:const:`0b1` |
+        +-----------------------------------+-----------------+
+        """
+        values = (
+            "Y_DISABLED",
+            "Y_ENABLED",
+        )
+        return values[self._y_enabled]
+
+    @y_enabled.setter
+    def y_enabled(self, value: int) -> None:
+        if value not in axis_enabled_values:
+            raise ValueError("Value must be a valid y_enabled setting")
+        self._y_enabled = value
+
+    @property
+    def z_enabled(self) -> str:
+        """
+        Sensor z_enabled
+        In order to optimize further power consumption of the h3lis200dl, data evaluation
+        of individual axes can be deactivated. Per default, all three axes are active.
+
+        +-----------------------------------+-----------------+
+        | Mode                              | Value           |
+        +===================================+=================+
+        | :py:const:`h3lis200dl.Z_DISABLED` | :py:const:`0b0` |
+        +-----------------------------------+-----------------+
+        | :py:const:`h3lis200dl.Z_ENABLED`  | :py:const:`0b1` |
+        +-----------------------------------+-----------------+
+        """
+        values = (
+            "Z_DISABLED",
+            "Z_ENABLED",
+        )
+        return values[self._z_enabled]
+
+    @z_enabled.setter
+    def z_enabled(self, value: int) -> None:
+        if value not in axis_enabled_values:
+            raise ValueError("Value must be a valid z_enabled setting")
+        self._z_enabled = value
