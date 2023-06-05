@@ -148,7 +148,7 @@ class H3LIS200DL:
             raise RuntimeError("Failed to find H3LIS200DL")
 
         self._operation_mode = NORMAL_MODE
-        self._memory_full_scale_selection = self._operation_mode
+        self._memory_full_scale_selection = self._full_scale_selection
 
     @property
     def operation_mode(self) -> str:
@@ -203,17 +203,17 @@ class H3LIS200DL:
         """
 
         x = (
-            self._twos_comp(self._acc_data_x, 7)
+            self._twos_comp(self._acc_data_x, 8)
             * full_scale[self._memory_full_scale_selection]
             / 128
         )
         y = (
-            self._twos_comp(self._acc_data_y, 7)
+            self._twos_comp(self._acc_data_y, 8)
             * full_scale[self._memory_full_scale_selection]
             / 128
         )
         z = (
-            self._twos_comp(self._acc_data_z, 7)
+            self._twos_comp(self._acc_data_z, 8)
             * full_scale[self._memory_full_scale_selection]
             / 128
         )
