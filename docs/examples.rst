@@ -42,3 +42,12 @@ Example showing the High pass filter cutoff setting
 .. literalinclude:: ../examples/h3lis200dl_high_pass_filter_cutoff.py
     :caption: examples/h3lis200dl_high_pass_filter_cutoff.py
     :lines: 5-
+
+Interrupt Example
+---------------------------------
+
+Interrupt Example
+
+.. literalinclude:: ../examples/h3lis200dl_interrupt_example.py
+    :caption: examples/h3lis200dl_interrupt_example.py
+    :lines: 5-

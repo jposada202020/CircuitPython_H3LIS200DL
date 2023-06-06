@@ -13,6 +13,7 @@ CircuitPython Driver for the ST H3LIS200DL Accelerometer
 
 """
 
+from collections import namedtuple
 from micropython import const
 from adafruit_bus_device import i2c_device
 from adafruit_register.i2c_struct import ROUnaryStruct, UnaryStruct
@@ -32,7 +33,13 @@ __repo__ = "https://github.com/jposada202020/CircuitPython_H3LIS200DL.git"
 _REG_WHOAMI = const(0x0F)
 _CTRL_REG1 = const(0x20)
 _CTRL_REG2 = const(0x21)
+_CTRL_REG3 = const(0x22)
 _CTRL_REG4 = const(0x23)
+_INT1_CFG = const(0x30)
+_INT1_SRC = const(0x31)
+_INT1_THS = const(0x32)
+_INT1_DURATION = const(0x33)
+
 
 _ACC_X = const(0x29)
 _ACC_Y = const(0x2B)
@@ -87,7 +94,9 @@ HPCF32 = const(0b10)
 HPCF64 = const(0b11)
 high_pass_filter_cutoff_values = (HPCF8, HPCF16, HPCF32, HPCF64)
 
+AlertStatus = namedtuple("AlertStatus", ["high_g", "low_g"])
 
+# pylint: disable=too-many-instance-attributes
 class H3LIS200DL:
     """Driver for the H3LIS200DL Sensor connected over I2C.
 
@@ -120,6 +129,11 @@ class H3LIS200DL:
     """
 
     _device_id = ROUnaryStruct(_REG_WHOAMI, "B")
+    _int1_configuration = UnaryStruct(_INT1_CFG, "B")
+    _int1_source_register = UnaryStruct(_INT1_SRC, "B")
+    _int1_threshold = UnaryStruct(_INT1_THS, "B")
+    _int1_duration = UnaryStruct(_INT1_DURATION, "B")
+    _int1_latched = RWBit(_CTRL_REG3, 2)
 
     # Acceleration Data
     _acc_data_x = UnaryStruct(_ACC_X, "B")
@@ -416,3 +430,84 @@ class H3LIS200DL:
         if value not in high_pass_filter_cutoff_values:
             raise ValueError("Value must be a valid high_pass_filter_cutoff setting")
         self._high_pass_filter_cutoff = value
+
+    @property
+    def interrupt1_configuration(self):
+        """
+        interrupt 1 configuration
+        :return: interrupt 1 configuration
+        """
+        return self._int1_configuration
+
+    @interrupt1_configuration.setter
+    def interrupt1_configuration(self, value: int):
+        if value > 255:
+            raise ValueError("value must be a valid setting")
+        self._int1_configuration = value
+
+    @property
+    def interrupt1_threshold(self):
+        """
+        interrupt 1 threshold
+        :return: threshold
+        """
+        return self._int1_threshold
+
+    @interrupt1_threshold.setter
+    def interrupt1_threshold(self, value: int):
+        if value > 128:
+            raise ValueError("value must be a valid setting")
+        self._int1_threshold = value
+
+    @property
+    def interrupt1_duration(self):
+        """
+        interrupt 1 duration set the minimum duration of the interrupt 1
+        event to be recognized. Duration steps and maximum values depend
+        on the ODR chosen
+
+
+        :return: interrupt 1 duration
+
+        """
+        return self._int1_duration
+
+    @interrupt1_duration.setter
+    def interrupt1_duration(self, value: int):
+        if value > 128:
+            raise ValueError("value must be a valid setting")
+        self._int1_duration = value
+
+    @property
+    def interrupt1_source_register(self):
+        """
+        interrupt 1 source register. Gives Interrupt 1 Information
+
+        """
+        dummy = self._int1_source_register
+
+        highx = dummy & 0x03 == 2
+        highy = (dummy & 0xC) >> 2 == 2
+        highz = (dummy & 0x30) >> 4 == 2
+
+        return (
+            AlertStatus(high_g=highx, low_g=not highx),
+            AlertStatus(high_g=highy, low_g=not highy),
+            AlertStatus(high_g=highz, low_g=not highz),
+        )
+
+    @property
+    def interrupt1_latched(self):
+        """
+        Latch interrupt request on the INT1_SRC register, with the INT1_SRC register
+        cleared by reading the INT1_SRC register. Default value: 0.
+        (0: interrupt request not latched; 1: interrupt request latched)
+        """
+        return self._int1_latched
+
+    @interrupt1_latched.setter
+    def interrupt1_latched(self, value):
+        """
+        interrupt 1 duration
+        """
+        self._int1_latched = value
