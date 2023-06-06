@@ -39,6 +39,10 @@ _INT1_CFG = const(0x30)
 _INT1_SRC = const(0x31)
 _INT1_THS = const(0x32)
 _INT1_DURATION = const(0x33)
+_INT2_CFG = const(0x34)
+_INT2_SRC = const(0x35)
+_INT2_THS = const(0x36)
+_INT2_DURATION = const(0x37)
 
 
 _ACC_X = const(0x29)
@@ -134,6 +138,12 @@ class H3LIS200DL:
     _int1_threshold = UnaryStruct(_INT1_THS, "B")
     _int1_duration = UnaryStruct(_INT1_DURATION, "B")
     _int1_latched = RWBit(_CTRL_REG3, 2)
+
+    _int2_configuration = UnaryStruct(_INT2_CFG, "B")
+    _int2_source_register = UnaryStruct(_INT2_SRC, "B")
+    _int2_threshold = UnaryStruct(_INT2_THS, "B")
+    _int2_duration = UnaryStruct(_INT2_DURATION, "B")
+    _int2_latched = RWBit(_CTRL_REG3, 5)
 
     # Acceleration Data
     _acc_data_x = UnaryStruct(_ACC_X, "B")
@@ -507,7 +517,85 @@ class H3LIS200DL:
 
     @interrupt1_latched.setter
     def interrupt1_latched(self, value):
-        """
-        interrupt 1 duration
-        """
         self._int1_latched = value
+
+    @property
+    def interrupt2_configuration(self):
+        """
+        interrupt 2 configuration
+        :return: interrupt 2 configuration
+        """
+        return self._int2_configuration
+
+    @interrupt2_configuration.setter
+    def interrupt2_configuration(self, value: int):
+        if value > 255:
+            raise ValueError("value must be a valid setting")
+        self._int2_configuration = value
+
+    @property
+    def interrupt2_threshold(self):
+        """
+        interrupt 2 threshold
+        :return: threshold
+        """
+        return self._int2_threshold
+
+    @interrupt2_threshold.setter
+    def interrupt2_threshold(self, value: int):
+        if value > 128:
+            raise ValueError("value must be a valid setting")
+        self._int2_threshold = value
+
+    @property
+    def interrupt2_duration(self):
+        """
+        interrupt 2 duration set the minimum duration of the interrupt 2
+        event to be recognized. Duration steps and maximum values depend
+        on the ODR chosen
+
+
+        :return: interrupt 2 duration
+
+        """
+        return self._int2_duration
+
+    @interrupt2_duration.setter
+    def interrupt2_duration(self, value: int):
+        if value > 128:
+            raise ValueError("value must be a valid setting")
+        self._int2_duration = value
+
+    @property
+    def interrupt2_source_register(self):
+        """
+        interrupt 2 source register. Gives Interrupt 2 Information
+
+        """
+        dummy = self._int2_source_register
+
+        highx = dummy & 0x03 == 2
+        highy = (dummy & 0xC) >> 2 == 2
+        highz = (dummy & 0x30) >> 4 == 2
+
+        return (
+            AlertStatus(high_g=highx, low_g=not highx),
+            AlertStatus(high_g=highy, low_g=not highy),
+            AlertStatus(high_g=highz, low_g=not highz),
+        )
+
+    @property
+    def interrupt2_latched(self):
+        """
+        Latch interrupt request on the INT2_SRC register, with the INT2_SRC register
+        cleared by reading the INT2_SRC register. Default value: 0.
+        (0: interrupt request not latched; 2: interrupt request latched)
+        """
+        return self._int2_latched
+
+    @interrupt2_latched.setter
+    def interrupt2_latched(self, value):
+        """
+        interrupt 2 duration
+        """
+        self._int2_latched = value
