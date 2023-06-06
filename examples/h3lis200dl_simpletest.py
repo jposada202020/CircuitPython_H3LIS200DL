@@ -11,5 +11,5 @@ h3lis = h3lis200dl.H3LIS200DL(i2c)
 
 while True:
     accx, accy, accz = h3lis.acceleration
-    print("x:{:.2f}m/s2, y:{:.2f}m/s2, z{:.2f}m/s2".format(accx, accy, accz))
+    print("x:{:.2f}g, y:{:.2f}g, z{:.2f}g".format(accx, accy, accz))
     time.sleep(0.5)
