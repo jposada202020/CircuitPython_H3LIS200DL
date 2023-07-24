@@ -20,9 +20,7 @@ authors = [
 urls = {Homepage = "https://github.com/jposada202020/CircuitPython_H3LIS200DL"}
 keywords = [
     "sensor",
-    "blinka",
     "circuitpython",
-    "micropython",
     "h3lis200dl",
     "acceleration",
     "driver",

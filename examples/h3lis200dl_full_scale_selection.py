@@ -16,6 +16,7 @@ while True:
         print("Current Full scale selection setting: ", h3lis.full_scale_selection)
         for _ in range(10):
             accx, accy, accz = h3lis.acceleration
-            print("x:{:.2f}g, y:{:.2f}g, z:{:.2f}g".format(accx, accy, accz))
+            print(f"x:{accx:.2f}g, y:{accy:.2f}g, z{accz:.2f}g")
+            print()
             time.sleep(0.5)
         h3lis.full_scale_selection = full_scale_selection

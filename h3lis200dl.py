@@ -100,6 +100,7 @@ high_pass_filter_cutoff_values = (HPCF8, HPCF16, HPCF32, HPCF64)
 
 AlertStatus = namedtuple("AlertStatus", ["high_g", "low_g"])
 
+
 # pylint: disable=too-many-instance-attributes
 class H3LIS200DL:
     """Driver for the H3LIS200DL Sensor connected over I2C.
@@ -124,11 +125,13 @@ class H3LIS200DL:
     .. code-block:: python
 
         i2c = board.I2C()  # uses board.SCL and board.SDA
-        h3lis200dl = h3lis200dl.H3LIS200DL(i2c)
+        h3lis = h3lis200dl.H3LIS200DL(i2c)
 
     Now you have access to the attributes
 
     .. code-block:: python
+
+        accx, accy, accz = h3lis.acceleration
 
     """
 

@@ -1,4 +1,4 @@
-H3LIS200DL
+CircuitPython H3LIS200DL Driver
 =========================================
 
 
